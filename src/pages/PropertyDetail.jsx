@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import api from '../utils/api'
+import { useToast } from '../components/ToastProvider'
+import { ERROR_MESSAGES } from '../utils/constants'
 import { FaRulerCombined, FaBed, FaBath, FaCar, FaMapMarkerAlt, FaArrowLeft } from 'react-icons/fa'
 import ImageCarousel from '../components/ImageCarousel'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
 
 export default function PropertyDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
   const [property, setProperty] = useState(null)
   const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
@@ -36,7 +37,7 @@ export default function PropertyDetail() {
       }))
     } catch (error) {
       console.error('Error loading property:', error)
-      toast.error('Error al cargar la propiedad')
+      toast.error(ERROR_MESSAGES.NOT_FOUND)
     } finally {
       setLoading(false)
     }
@@ -50,7 +51,7 @@ export default function PropertyDetail() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.name || !formData.email || !formData.message) {
-      toast.error('Por favor completa todos los campos obligatorios')
+      toast.error(ERROR_MESSAGES.REQUIRED_FIELDS)
       return
     }
 
@@ -60,7 +61,7 @@ export default function PropertyDetail() {
         ...formData,
         property_id: id
       })
-      toast.success('Consulta enviada correctamente. Nos pondremos en contacto pronto.')
+      toast.success('¡Consulta enviada! Nos contactaremos pronto.')
       setFormData({
         name: '',
         email: '',
@@ -68,7 +69,9 @@ export default function PropertyDetail() {
         message: `Hola, estoy interesado/a en la propiedad: ${property.title}`
       })
     } catch (err) {
-      toast.error('Error al enviar la consulta: ' + (err.response?.data?.message || err.message))
+      console.error('Error al enviar consulta:', err)
+      const errorMsg = err.response?.data?.message || ERROR_MESSAGES.GENERIC
+      toast.error(errorMsg)
     } finally {
       setSubmitting(false)
     }
@@ -107,73 +110,73 @@ export default function PropertyDetail() {
   const searchMapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
       {/* Botón volver */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-blue-600 hover:underline mb-4"
+        className="flex items-center gap-2 text-blue-600 hover:underline mb-3 md:mb-4 text-sm md:text-base"
       >
         <FaArrowLeft /> Volver
       </button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
         {/* Columna principal */}
         <div className="lg:col-span-2 space-y-6">
           {/* Carrusel de imágenes */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="h-96">
+            <div className="h-64 md:h-96">
               <ImageCarousel images={property.images} alt={property.title} />
             </div>
           </div>
 
           {/* Información principal */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h1 className="text-3xl font-bold mb-3">{property.title}</h1>
+          <div className="bg-white rounded-lg shadow p-4 md:p-6">
+            <h1 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">{property.title}</h1>
             
-            <div className="flex items-center gap-2 text-gray-600 mb-4">
+            <div className="flex items-center gap-2 text-gray-600 mb-3 md:mb-4 text-sm md:text-base">
               <FaMapMarkerAlt className="text-blue-500" />
-              <span>{fullAddress}</span>
+              <span className="line-clamp-1">{fullAddress}</span>
             </div>
 
-            <div className="text-4xl font-bold text-blue-600 mb-6">
+            <div className="text-2xl md:text-4xl font-bold text-blue-600 mb-4 md:mb-6">
               ${parseFloat(property.price).toLocaleString()} {property.currency}
             </div>
 
             {/* Características principales */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pb-6 border-b">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6 pb-4 md:pb-6 border-b">
               {property.surface_total && (
-                <div className="flex items-center gap-3">
-                  <FaRulerCombined className="text-blue-500 text-2xl" />
+                <div className="flex items-center gap-2 md:gap-3">
+                  <FaRulerCombined className="text-blue-500 text-xl md:text-2xl" />
                   <div>
-                    <div className="text-sm text-gray-600">Superficie</div>
-                    <div className="font-semibold">{property.surface_total} m²</div>
+                    <div className="text-xs md:text-sm text-gray-600">Superficie</div>
+                    <div className="font-semibold text-sm md:text-base">{property.surface_total} m²</div>
                   </div>
                 </div>
               )}
               {property.bedrooms && (
-                <div className="flex items-center gap-3">
-                  <FaBed className="text-blue-500 text-2xl" />
+                <div className="flex items-center gap-2 md:gap-3">
+                  <FaBed className="text-blue-500 text-xl md:text-2xl" />
                   <div>
-                    <div className="text-sm text-gray-600">Dormitorios</div>
-                    <div className="font-semibold">{property.bedrooms}</div>
+                    <div className="text-xs md:text-sm text-gray-600">Dormitorios</div>
+                    <div className="font-semibold text-sm md:text-base">{property.bedrooms}</div>
                   </div>
                 </div>
               )}
               {property.bathrooms && (
-                <div className="flex items-center gap-3">
-                  <FaBath className="text-blue-500 text-2xl" />
+                <div className="flex items-center gap-2 md:gap-3">
+                  <FaBath className="text-blue-500 text-xl md:text-2xl" />
                   <div>
-                    <div className="text-sm text-gray-600">Baños</div>
-                    <div className="font-semibold">{property.bathrooms}</div>
+                    <div className="text-xs md:text-sm text-gray-600">Baños</div>
+                    <div className="font-semibold text-sm md:text-base">{property.bathrooms}</div>
                   </div>
                 </div>
               )}
               {property.garages !== undefined && property.garages !== null && (
-                <div className="flex items-center gap-3">
-                  <FaCar className="text-blue-500 text-2xl" />
+                <div className="flex items-center gap-2 md:gap-3">
+                  <FaCar className="text-blue-500 text-xl md:text-2xl" />
                   <div>
-                    <div className="text-sm text-gray-600">Cocheras</div>
-                    <div className="font-semibold">{property.garages || 0}</div>
+                    <div className="text-xs md:text-sm text-gray-600">Cocheras</div>
+                    <div className="font-semibold text-sm md:text-base">{property.garages || 0}</div>
                   </div>
                 </div>
               )}
@@ -181,55 +184,55 @@ export default function PropertyDetail() {
 
             {/* Descripción */}
             {property.description && (
-              <div className="mb-6">
-                <h2 className="text-xl font-bold mb-3">Descripción</h2>
-                <p className="text-gray-700 whitespace-pre-wrap">{property.description}</p>
+              <div className="mb-4 md:mb-6">
+                <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-3">Descripción</h2>
+                <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap">{property.description}</p>
               </div>
             )}
 
             {/* Detalles adicionales */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6">
               {property.surface_covered && (
                 <div>
-                  <span className="text-sm text-gray-600">Superficie cubierta:</span>
-                  <span className="ml-2 font-semibold">{property.surface_covered} m²</span>
+                  <span className="text-xs md:text-sm text-gray-600">Superficie cubierta:</span>
+                  <span className="ml-2 font-semibold text-sm md:text-base">{property.surface_covered} m²</span>
                 </div>
               )}
               {property.floor_number && (
                 <div>
-                  <span className="text-sm text-gray-600">Piso:</span>
-                  <span className="ml-2 font-semibold">{property.floor_number}</span>
+                  <span className="text-xs md:text-sm text-gray-600">Piso:</span>
+                  <span className="ml-2 font-semibold text-sm md:text-base">{property.floor_number}</span>
                 </div>
               )}
               {property.year_built && (
                 <div>
-                  <span className="text-sm text-gray-600">Año de construcción:</span>
-                  <span className="ml-2 font-semibold">{property.year_built}</span>
+                  <span className="text-xs md:text-sm text-gray-600">Año de construcción:</span>
+                  <span className="ml-2 font-semibold text-sm md:text-base">{property.year_built}</span>
                 </div>
               )}
               {property.property_type_name && (
                 <div>
-                  <span className="text-sm text-gray-600">Tipo de propiedad:</span>
-                  <span className="ml-2 font-semibold">{property.property_type_name}</span>
+                  <span className="text-xs md:text-sm text-gray-600">Tipo de propiedad:</span>
+                  <span className="ml-2 font-semibold text-sm md:text-base">{property.property_type_name}</span>
                 </div>
               )}
               {property.operation_type_name && (
                 <div>
-                  <span className="text-sm text-gray-600">Operación:</span>
-                  <span className="ml-2 font-semibold">{property.operation_type_name}</span>
+                  <span className="text-xs md:text-sm text-gray-600">Operación:</span>
+                  <span className="ml-2 font-semibold text-sm md:text-base">{property.operation_type_name}</span>
                 </div>
               )}
             </div>
 
             {/* Amenidades */}
             {property.amenities && property.amenities.length > 0 && (
-              <div className="mt-6 pt-6 border-t">
-                <h2 className="text-xl font-bold mb-3">Amenidades</h2>
+              <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t">
+                <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-3">Amenidades</h2>
                 <div className="flex flex-wrap gap-2">
                   {property.amenities.map((amenity, index) => (
                     <span
                       key={index}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                      className="bg-blue-100 text-blue-800 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm"
                     >
                       {amenity.name || amenity}
                     </span>
@@ -241,8 +244,8 @@ export default function PropertyDetail() {
 
           {/* Mapa */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
-            <h2 className="text-xl font-bold p-6 pb-4">Ubicación</h2>
-            <div className="h-96">
+            <h2 className="text-lg md:text-xl font-bold p-4 md:p-6 pb-3 md:pb-4">Ubicación</h2>
+            <div className="h-64 md:h-96">
               <iframe
                 src={searchMapUrl}
                 width="100%"
@@ -254,18 +257,18 @@ export default function PropertyDetail() {
                 title="Ubicación de la propiedad"
               />
             </div>
-            <div className="p-4 bg-gray-50 text-sm text-gray-600">
+            <div className="p-3 md:p-4 bg-gray-50 text-xs md:text-sm text-gray-600">
               <FaMapMarkerAlt className="inline mr-2 text-blue-500" />
-              {fullAddress}
+              <span className="line-clamp-2">{fullAddress}</span>
             </div>
           </div>
         </div>
 
         {/* Sidebar - Formulario de consulta */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow p-6 sticky top-6">
-            <h2 className="text-2xl font-bold mb-4">Consultar por esta propiedad</h2>
-            <p className="text-gray-600 mb-6 text-sm">
+          <div className="bg-white rounded-lg shadow p-4 md:p-6 lg:sticky lg:top-6">
+            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Consultar por esta propiedad</h2>
+            <p className="text-gray-600 mb-4 md:mb-6 text-sm">
               Completa el formulario y te contactaremos a la brevedad
             </p>
 
@@ -337,8 +340,6 @@ export default function PropertyDetail() {
           </div>
         </div>
       </div>
-
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   )
 }

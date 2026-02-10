@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { FaChevronLeft, FaChevronRight, FaHome } from 'react-icons/fa'
+import { getImageUrl } from '../utils/imageHelper'
 
 export default function ImageCarousel({ images, alt = 'Property' }) {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -10,15 +11,6 @@ export default function ImageCarousel({ images, alt = 'Property' }) {
         <FaHome className="text-4xl" />
       </div>
     )
-  }
-
-  const normalizeImageUrl = (img) => {
-    if(!img) return img
-    if (img.startsWith('http') || img.startsWith('//')) return img
-    let v = img.replace(/\\/g, '/')
-    if (!v.startsWith('/')) v = '/' + v
-    const base = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-    return base.replace(/\/$/, '') + v
   }
 
   const goToPrevious = (e) => {
@@ -34,7 +26,7 @@ export default function ImageCarousel({ images, alt = 'Property' }) {
   return (
     <div className="relative w-full h-full group">
       <img
-        src={normalizeImageUrl(images[currentIndex].image_url)}
+        src={getImageUrl(images[currentIndex].image_url)}
         alt={alt}
         className="w-full h-full object-cover"
       />

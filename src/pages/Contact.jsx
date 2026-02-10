@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import api from '../utils/api'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { useToast } from '../components/ToastProvider'
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../utils/constants'
 import { FaPhone, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa'
 
 export default function Contact() {
+  const toast = useToast()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,98 +22,100 @@ export default function Contact() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.name || !formData.email || !formData.message) {
-      toast.error('Por favor completa todos los campos')
+      toast.error(ERROR_MESSAGES.REQUIRED_FIELDS)
       return
     }
 
     setLoading(true)
     try {
       await api.post('/contact', formData)
-      toast.success('Mensaje enviado correctamente. Nos pondremos en contacto pronto.')
+      toast.success('¡Mensaje enviado! Nos pondremos en contacto pronto.')
       setFormData({ name: '', email: '', phone: '', message: '' })
     } catch (err) {
-      toast.error('Error al enviar el mensaje: ' + (err.response?.data?.message || err.message))
+      console.error('Error en contacto:', err)
+      const errorMsg = err.response?.data?.message || ERROR_MESSAGES.GENERIC
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold mb-12 text-center">Contactanos</h1>
+    <div className="max-w-6xl mx-auto px-4 py-6 md:py-12">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 md:mb-12 text-center">Contactanos</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12">
         {/* Información de contacto demo */}
-        <div className="bg-white p-6 rounded shadow text-center">
-          <FaPhone className="text-3xl text-blue-500 mx-auto mb-4" />
-          <h3 className="font-bold text-lg mb-2">Teléfono</h3>
-          <p className="text-gray-600">(011) 4822-3456</p>
-          <p className="text-gray-600">Lunes a Viernes: 9:00 - 18:00</p>
+        <div className="bg-white p-4 md:p-6 rounded shadow text-center">
+          <FaPhone className="text-2xl md:text-3xl text-blue-500 mx-auto mb-3 md:mb-4" />
+          <h3 className="font-bold text-base md:text-lg mb-2">Teléfono</h3>
+          <p className="text-gray-600 text-sm md:text-base">(011) 4822-3456</p>
+          <p className="text-gray-600 text-xs md:text-base">Lunes a Viernes: 9:00 - 18:00</p>
         </div>
 
-        <div className="bg-white p-6 rounded shadow text-center">
-          <FaEnvelope className="text-3xl text-blue-500 mx-auto mb-4" />
-          <h3 className="font-bold text-lg mb-2">Email</h3>
-          <p className="text-gray-600">info@inmobiliaria.com</p>
-          <p className="text-gray-600">Respuesta en 24hs</p>
+        <div className="bg-white p-4 md:p-6 rounded shadow text-center">
+          <FaEnvelope className="text-2xl md:text-3xl text-blue-500 mx-auto mb-3 md:mb-4" />
+          <h3 className="font-bold text-base md:text-lg mb-2">Email</h3>
+          <p className="text-gray-600 text-sm md:text-base">info@inmobiliaria.com</p>
+          <p className="text-gray-600 text-xs md:text-base">Respuesta en 24hs</p>
         </div>
 
-        <div className="bg-white p-6 rounded shadow text-center">
-          <FaMapMarkerAlt className="text-3xl text-blue-500 mx-auto mb-4" />
-          <h3 className="font-bold text-lg mb-2">Oficina</h3>
-          <p className="text-gray-600">Av. Corrientes 1234</p>
-          <p className="text-gray-600">Buenos Aires, Argentina</p>
+        <div className="bg-white p-4 md:p-6 rounded shadow text-center">
+          <FaMapMarkerAlt className="text-2xl md:text-3xl text-blue-500 mx-auto mb-3 md:mb-4" />
+          <h3 className="font-bold text-base md:text-lg mb-2">Oficina</h3>
+          <p className="text-gray-600 text-sm md:text-base">Av. Corrientes 1234</p>
+          <p className="text-gray-600 text-xs md:text-base">Buenos Aires, Argentina</p>
         </div>
       </div>
 
       {/* Formulario de contacto */}
-      <div className="max-w-2xl mx-auto bg-white p-8 rounded shadow">
-        <h2 className="text-2xl font-bold mb-6">Envíanos un mensaje</h2>
+      <div className="max-w-2xl mx-auto bg-white p-4 md:p-8 rounded shadow">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Envíanos un mensaje</h2>
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block mb-2 font-semibold">Nombre *</label>
+            <label className="block mb-2 font-semibold text-sm md:text-base">Nombre *</label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded text-sm md:text-base"
               required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block mb-2 font-semibold">Email *</label>
+              <label className="block mb-2 font-semibold text-sm md:text-base">Email *</label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded text-sm md:text-base"
                 required
               />
             </div>
             <div>
-              <label className="block mb-2 font-semibold">Teléfono</label>
+              <label className="block mb-2 font-semibold text-sm md:text-base">Teléfono</label>
               <input
                 type="tel"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded text-sm md:text-base"
               />
             </div>
           </div>
 
           <div className="mb-6">
-            <label className="block mb-2 font-semibold">Mensaje *</label>
+            <label className="block mb-2 font-semibold text-sm md:text-base">Mensaje *</label>
             <textarea
               name="message"
               value={formData.message}
               onChange={handleChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded text-sm md:text-base"
               rows="5"
               placeholder="Cuéntanos en qué podemos ayudarte"
               required
@@ -122,14 +125,12 @@ export default function Contact() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white p-3 rounded font-semibold hover:bg-blue-600 disabled:bg-gray-400"
+            className="w-full bg-blue-500 text-white p-3 rounded font-semibold hover:bg-blue-600 disabled:bg-gray-400 text-sm md:text-base"
           >
             {loading ? 'Enviando...' : 'Enviar mensaje'}
           </button>
         </form>
       </div>
-
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   )
 }

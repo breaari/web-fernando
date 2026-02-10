@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../utils/api'
-import { FaRulerCombined, FaBed, FaBath, FaCar } from 'react-icons/fa'
+import { FaRulerCombined, FaBed, FaBath, FaCar, FaFilter, FaChevronDown, FaChevronUp } from 'react-icons/fa'
 import ImageCarousel from '../components/ImageCarousel'
 import LocationSearch from '../components/LocationSearch'
 
@@ -22,6 +22,7 @@ export default function PropertyList({ operationType }) {
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
   const [sortBy, setSortBy] = useState('relevant')
+  const [showFilters, setShowFilters] = useState(false)
 
   // Cargar catálogos
   useEffect(() => {
@@ -195,120 +196,137 @@ export default function PropertyList({ operationType }) {
   }, [allProperties, location, selectedPropertyType, selectedOperationType, currency, minPrice, maxPrice, sortBy])
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="max-w-7xl mx-auto px-4 py-6 md:py-12">
       {/* Filtros */}
-      <div className="bg-white p-6 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          {/* Búsqueda por ubicación */}
-          <div className="lg:col-span-2">
-            <label className="block text-sm font-medium mb-2">Ubicación</label>
+      <div className="bg-white p-3 md:p-6 rounded-lg shadow mb-4 md:mb-6">
+        {/* Búsqueda principal y botón filtros (mobile) */}
+        <div className="space-y-3">
+          {/* Ubicación (siempre visible) */}
+          <div>
+            <label className="block text-xs md:text-sm font-medium mb-1 md:mb-2">Ubicación</label>
             <LocationSearch 
               value={location.query}
               onChange={setLocation}
-              placeholder="Buscar por ciudad, barrio, dirección..."
+              placeholder="Ciudad, barrio..."
             />
           </div>
 
-          {/* Tipo de propiedad */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Tipo de propiedad</label>
-            <select
-              value={selectedPropertyType}
-              onChange={(e) => setSelectedPropertyType(e.target.value)}
-              className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todos</option>
-              {propertyTypes.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
+          {/* Botón para mostrar/ocultar filtros en mobile */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="md:hidden w-full flex items-center justify-between p-2 border rounded hover:bg-gray-50 transition text-sm"
+          >
+            <span className="flex items-center gap-2">
+              <FaFilter className="text-blue-500" />
+              Más filtros
+            </span>
+            {showFilters ? <FaChevronUp /> : <FaChevronDown />}
+          </button>
 
-          {/* Tipo de operación */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Tipo de operación</label>
-            <select
-              value={selectedOperationType}
-              onChange={(e) => setSelectedOperationType(e.target.value)}
-              className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todos</option>
-              {operationTypes.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+          {/* Filtros adicionales (colapsables en mobile, siempre visible en desktop) */}
+          <div className={`space-y-3 ${showFilters ? 'block' : 'hidden md:block'}`}>
+            {/* Tipo de propiedad y operación */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs md:text-sm font-medium mb-1 md:mb-2">Tipo de propiedad</label>
+                <select
+                  value={selectedPropertyType}
+                  onChange={(e) => setSelectedPropertyType(e.target.value)}
+                  className="w-full p-2 md:p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                >
+                  <option value="">Todos</option>
+                  {propertyTypes.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
 
-        {/* Precio */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Moneda</label>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="ARS">ARS ($)</option>
-              <option value="USD">USD (US$)</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Precio mínimo</label>
-            <input
-              type="number"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              placeholder="0"
-              min="0"
-              step="1000"
-              className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+              <div>
+                <label className="block text-xs md:text-sm font-medium mb-1 md:mb-2">Tipo de operación</label>
+                <select
+                  value={selectedOperationType}
+                  onChange={(e) => setSelectedOperationType(e.target.value)}
+                  className="w-full p-2 md:p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                >
+                  <option value="">Todos</option>
+                  {operationTypes.map(t => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Precio máximo</label>
-            <input
-              type="number"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              placeholder="Sin límite"
-              min="0"
-              step="1000"
-              className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            {/* Precio */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
+              <div>
+                <label className="block text-xs md:text-sm font-medium mb-1 md:mb-2">Moneda</label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="w-full p-2 md:p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                >
+                  <option value="ARS">ARS</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs md:text-sm font-medium mb-1 md:mb-2">Mín.</label>
+                <input
+                  type="number"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  step="1000"
+                  className="w-full p-2 md:p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                />
+              </div>
 
-          <div className="flex items-end">
-            <button
-              onClick={() => {
-                setLocation({ query: '', city: '', state: '', country: '' })
-                setSelectedPropertyType('')
-                setSelectedOperationType('')
-                setMinPrice('')
-                setMaxPrice('')
-                setCurrency('ARS')
-              }}
-              className="w-full p-3 border rounded hover:bg-gray-50 transition"
-            >
-              Limpiar filtros
-            </button>
+              <div>
+                <label className="block text-xs md:text-sm font-medium mb-1 md:mb-2">Máx.</label>
+                <input
+                  type="number"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  placeholder="Sin límite"
+                  min="0"
+                  step="1000"
+                  className="w-full p-2 md:p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+                />
+              </div>
+
+              <div className="flex items-end col-span-2 md:col-span-1">
+                <button
+                  onClick={() => {
+                    setLocation({ query: '', city: '', state: '', country: '' })
+                    setSelectedPropertyType('')
+                    setSelectedOperationType('')
+                    setMinPrice('')
+                    setMaxPrice('')
+                    setCurrency('ARS')
+                  }}
+                  className="w-full p-2 md:p-3 border rounded hover:bg-gray-50 transition text-xs md:text-sm"
+                >
+                  Limpiar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Contador y ordenamiento */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="text-gray-600">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+        <div className="text-gray-600 text-sm md:text-base">
           {loading ? 'Cargando...' : `${properties.length} ${properties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}`}
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Ordenar por:</label>
+          <label className="text-xs md:text-sm font-medium whitespace-nowrap">Ordenar:</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
             <option value="relevant">Más relevantes</option>
             <option value="price-asc">Menor precio</option>
@@ -323,28 +341,28 @@ export default function PropertyList({ operationType }) {
       ) : properties.length === 0 ? (
         <div className="text-center py-12 text-gray-600">No hay propiedades que coincidan con los filtros</div>
       ) : (
-        <div className="grid grid-cols-1 gap-6">
+        <div className="grid grid-cols-1 gap-4 md:gap-6">
           {properties.map(p => (
-            <div key={p.id} className="flex border rounded-lg overflow-hidden shadow bg-white hover:shadow-xl transition">
-              <Link to={`/propiedad/${p.id}`} className="w-64 h-48 flex-shrink-0">
+            <div key={p.id} className="flex flex-col md:flex-row border rounded-lg overflow-hidden shadow bg-white hover:shadow-xl transition">
+              <Link to={`/propiedad/${p.id}`} className="w-full md:w-64 h-48 md:h-56 flex-shrink-0">
                 <ImageCarousel images={p.images} alt={p.title} />
               </Link>
-              <div className="p-5 flex-1">
+              <div className="p-3 md:p-5 flex-1">
                 <Link to={`/propiedad/${p.id}`}>
-                  <h3 className="font-bold text-xl mb-2 hover:text-blue-600 transition">{p.title}</h3>
+                  <h3 className="font-bold text-lg md:text-xl mb-2 hover:text-blue-600 transition">{p.title}</h3>
                 </Link>
-                <p className="text-blue-600 font-bold text-2xl mb-3">${parseFloat(p.price).toLocaleString()} {p.currency}</p>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-blue-600 font-bold text-xl md:text-2xl mb-2 md:mb-3">${parseFloat(p.price).toLocaleString()} {p.currency}</p>
+                <p className="text-xs md:text-sm text-gray-600 mb-3 md:mb-4">
                   {[p.street, p.street_number, p.neighborhood, p.city].filter(Boolean).join(', ')}
                 </p>
                 {p.description && (
-                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">{p.description}</p>
+                  <p className="text-xs md:text-sm text-gray-700 mb-3 md:mb-4 line-clamp-2 hidden sm:block">{p.description}</p>
                 )}
-                <div className="flex gap-6 text-sm text-gray-700">
-                  {p.surface_total && <div className="flex items-center gap-2"><FaRulerCombined className="text-blue-500"/><span>{p.surface_total} m²</span></div>}
-                  {p.bedrooms && <div className="flex items-center gap-2"><FaBed className="text-blue-500"/><span>{p.bedrooms} {p.bedrooms === 1 ? 'dormitorio' : 'dormitorios'}</span></div>}
-                  {p.bathrooms && <div className="flex items-center gap-2"><FaBath className="text-blue-500"/><span>{p.bathrooms} {p.bathrooms === 1 ? 'baño' : 'baños'}</span></div>}
-                  {p.garages !== undefined && p.garages !== null && <div className="flex items-center gap-2"><FaCar className="text-blue-500"/><span>{p.garages || 0} {p.garages === 1 ? 'cochera' : 'cocheras'}</span></div>}
+                <div className="flex flex-wrap gap-3 md:gap-6 text-xs md:text-sm text-gray-700">
+                  {p.surface_total && <div className="flex items-center gap-1 md:gap-2"><FaRulerCombined className="text-blue-500"/><span>{p.surface_total} m²</span></div>}
+                  {p.bedrooms && <div className="flex items-center gap-1 md:gap-2"><FaBed className="text-blue-500"/><span className="hidden sm:inline">{p.bedrooms} {p.bedrooms === 1 ? 'dormitorio' : 'dormitorios'}</span><span className="sm:hidden">{p.bedrooms} dorm.</span></div>}
+                  {p.bathrooms && <div className="flex items-center gap-1 md:gap-2"><FaBath className="text-blue-500"/><span className="hidden sm:inline">{p.bathrooms} {p.bathrooms === 1 ? 'baño' : 'baños'}</span><span className="sm:hidden">{p.bathrooms} baño</span></div>}
+                  {p.garages !== undefined && p.garages !== null && <div className="flex items-center gap-1 md:gap-2"><FaCar className="text-blue-500"/><span className="hidden sm:inline">{p.garages || 0} {p.garages === 1 ? 'cochera' : 'cocheras'}</span><span className="sm:hidden">{p.garages || 0} coch.</span></div>}
                 </div>
               </div>
             </div>
