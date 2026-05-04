@@ -3,22 +3,34 @@ import { useParams, useNavigate } from 'react-router-dom'
 import api from '../utils/api'
 import { useToast } from '../components/ToastProvider'
 import { ERROR_MESSAGES } from '../utils/constants'
-import { FaRulerCombined, FaBed, FaBath, FaCar, FaMapMarkerAlt, FaArrowLeft } from 'react-icons/fa'
+import {
+  FaRulerCombined,
+  FaBed,
+  FaBath,
+  FaCar,
+  FaMapMarkerAlt,
+  FaArrowLeft,
+  FaWhatsapp,
+  FaEnvelope,
+  FaPhoneAlt,
+} from 'react-icons/fa'
 import ImageCarousel from '../components/ImageCarousel'
 
 export default function PropertyDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const toast = useToast()
+
   const [property, setProperty] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    message: ''
+    message: '',
   })
-  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     loadProperty()
@@ -28,12 +40,13 @@ export default function PropertyDetail() {
     try {
       setLoading(true)
       const response = await api.get(`/properties/${id}`)
-      setProperty(response.data.data)
-      
-      // Pre-llenar mensaje
+      const data = response.data.data
+
+      setProperty(data)
+
       setFormData(prev => ({
         ...prev,
-        message: `Hola, estoy interesado/a en la propiedad: ${response.data.data.title}`
+        message: `Hola, estoy interesado/a en la propiedad: ${data.title}`,
       }))
     } catch (error) {
       console.error('Error loading property:', error)
@@ -43,30 +56,34 @@ export default function PropertyDetail() {
     }
   }
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault()
+
     if (!formData.name || !formData.email || !formData.message) {
       toast.error(ERROR_MESSAGES.REQUIRED_FIELDS)
       return
     }
 
     setSubmitting(true)
+
     try {
       await api.post('/inquiries', {
         ...formData,
-        property_id: id
+        property_id: id,
       })
+
       toast.success('¡Consulta enviada! Nos contactaremos pronto.')
+
       setFormData({
         name: '',
         email: '',
         phone: '',
-        message: `Hola, estoy interesado/a en la propiedad: ${property.title}`
+        message: `Hola, estoy interesado/a en la propiedad: ${property.title}`,
       })
     } catch (err) {
       console.error('Error al enviar consulta:', err)
@@ -78,16 +95,20 @@ export default function PropertyDetail() {
   }
 
   if (loading) {
-    return <div className="max-w-7xl mx-auto px-4 py-12 text-center">Cargando...</div>
+    return (
+      <div className="bg-surface min-h-screen pt-32 text-center text-on-surface-variant">
+        Cargando propiedad...
+      </div>
+    )
   }
 
   if (!property) {
     return (
-      <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <p className="text-gray-600 mb-4">Propiedad no encontrada</p>
+      <div className="bg-surface min-h-screen pt-32 text-center">
+        <p className="text-on-surface-variant mb-4">Propiedad no encontrada</p>
         <button
           onClick={() => navigate(-1)}
-          className="text-blue-600 hover:underline"
+          className="text-secondary hover:underline"
         >
           Volver
         </button>
@@ -100,246 +121,300 @@ export default function PropertyDetail() {
     property.street_number,
     property.neighborhood,
     property.city,
-    property.province
+    property.province,
   ].filter(Boolean).join(', ')
 
-  // Generar URL del mapa (Google Maps embed)
-  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(fullAddress)}`
-  
-  // Alternativa usando iframe de búsqueda (sin API key)
-  const searchMapUrl = `https://maps.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`
+  const googleMapsKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+
+  const mapUrl = googleMapsKey
+    ? `https://www.google.com/maps/embed/v1/place?key=${googleMapsKey}&q=${encodeURIComponent(fullAddress)}`
+    : `https://maps.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-      {/* Botón volver */}
-      <button
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-blue-600 hover:underline mb-3 md:mb-4 text-sm md:text-base"
-      >
-        <FaArrowLeft /> Volver
-      </button>
+    <div className="bg-surface min-h-screen pt-28 pb-20 text-on-surface">
+      <div className="max-w-[1440px] mx-auto px-6 md:px-12">
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-8">
-        {/* Columna principal */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Carrusel de imágenes */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="h-64 md:h-96">
-              <ImageCarousel images={property.images} alt={property.title} />
-            </div>
-          </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-2 text-secondary text-xs tracking-[0.18em] uppercase font-bold mb-8 hover:opacity-80 transition"
+        >
+          <FaArrowLeft />
+          Volver
+        </button>
 
-          {/* Información principal */}
-          <div className="bg-white rounded-lg shadow p-4 md:p-6">
-            <h1 className="text-xl md:text-3xl font-bold mb-2 md:mb-3">{property.title}</h1>
-            
-            <div className="flex items-center gap-2 text-gray-600 mb-3 md:mb-4 text-sm md:text-base">
-              <FaMapMarkerAlt className="text-blue-500" />
-              <span className="line-clamp-1">{fullAddress}</span>
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* MAIN */}
+          <div className="lg:col-span-2 space-y-8">
 
-            <div className="text-2xl md:text-4xl font-bold text-blue-600 mb-4 md:mb-6">
-              ${parseFloat(property.price).toLocaleString()} {property.currency}
-            </div>
-
-            {/* Características principales */}
-            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6 pb-4 md:pb-6 border-b">
-              {property.surface_total && (
-                <div className="flex items-center gap-2 md:gap-3">
-                  <FaRulerCombined className="text-blue-500 text-xl md:text-2xl" />
-                  <div>
-                    <div className="text-xs md:text-sm text-gray-600">Superficie</div>
-                    <div className="font-semibold text-sm md:text-base">{property.surface_total} m²</div>
-                  </div>
-                </div>
-              )}
-              {property.bedrooms && (
-                <div className="flex items-center gap-2 md:gap-3">
-                  <FaBed className="text-blue-500 text-xl md:text-2xl" />
-                  <div>
-                    <div className="text-xs md:text-sm text-gray-600">Dormitorios</div>
-                    <div className="font-semibold text-sm md:text-base">{property.bedrooms}</div>
-                  </div>
-                </div>
-              )}
-              {property.bathrooms && (
-                <div className="flex items-center gap-2 md:gap-3">
-                  <FaBath className="text-blue-500 text-xl md:text-2xl" />
-                  <div>
-                    <div className="text-xs md:text-sm text-gray-600">Baños</div>
-                    <div className="font-semibold text-sm md:text-base">{property.bathrooms}</div>
-                  </div>
-                </div>
-              )}
-              {property.garages !== undefined && property.garages !== null && (
-                <div className="flex items-center gap-2 md:gap-3">
-                  <FaCar className="text-blue-500 text-xl md:text-2xl" />
-                  <div>
-                    <div className="text-xs md:text-sm text-gray-600">Cocheras</div>
-                    <div className="font-semibold text-sm md:text-base">{property.garages || 0}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Descripción */}
-            {property.description && (
-              <div className="mb-4 md:mb-6">
-                <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-3">Descripción</h2>
-                <p className="text-sm md:text-base text-gray-700 whitespace-pre-wrap">{property.description}</p>
+            {/* IMAGE */}
+            <div className="bg-primary/40 border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+              <div className="h-[320px] md:h-[520px]">
+                <ImageCarousel images={property.images} alt={property.title} />
               </div>
-            )}
-
-            {/* Detalles adicionales */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6">
-              {property.surface_covered && (
-                <div>
-                  <span className="text-xs md:text-sm text-gray-600">Superficie cubierta:</span>
-                  <span className="ml-2 font-semibold text-sm md:text-base">{property.surface_covered} m²</span>
-                </div>
-              )}
-              {property.floor_number && (
-                <div>
-                  <span className="text-xs md:text-sm text-gray-600">Piso:</span>
-                  <span className="ml-2 font-semibold text-sm md:text-base">{property.floor_number}</span>
-                </div>
-              )}
-              {property.year_built && (
-                <div>
-                  <span className="text-xs md:text-sm text-gray-600">Año de construcción:</span>
-                  <span className="ml-2 font-semibold text-sm md:text-base">{property.year_built}</span>
-                </div>
-              )}
-              {property.property_type_name && (
-                <div>
-                  <span className="text-xs md:text-sm text-gray-600">Tipo de propiedad:</span>
-                  <span className="ml-2 font-semibold text-sm md:text-base">{property.property_type_name}</span>
-                </div>
-              )}
-              {property.operation_type_name && (
-                <div>
-                  <span className="text-xs md:text-sm text-gray-600">Operación:</span>
-                  <span className="ml-2 font-semibold text-sm md:text-base">{property.operation_type_name}</span>
-                </div>
-              )}
             </div>
 
-            {/* Amenidades */}
-            {property.amenities && property.amenities.length > 0 && (
-              <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t">
-                <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-3">Amenidades</h2>
-                <div className="flex flex-wrap gap-2">
-                  {property.amenities.map((amenity, index) => (
-                    <span
-                      key={index}
-                      className="bg-blue-100 text-blue-800 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm"
-                    >
-                      {amenity.name || amenity}
-                    </span>
-                  ))}
-                </div>
+            {/* INFO */}
+            <div className="bg-primary/40 border border-white/10 rounded-xl p-6 md:p-8 shadow-2xl">
+              <span className="text-secondary tracking-[0.25em] text-xs uppercase block mb-3">
+                {property.operation_type_name || 'Propiedad'}
+              </span>
+
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-5 leading-tight">
+                {property.title}
+              </h1>
+
+              <div className="flex items-start gap-3 text-on-surface-variant mb-6">
+                <FaMapMarkerAlt className="text-secondary mt-1 flex-shrink-0" />
+                <span>{fullAddress}</span>
               </div>
-            )}
+
+              <div className="text-secondary text-2xl md:text-4xl font-bold mb-8">
+                ${parseFloat(property.price).toLocaleString()} {property.currency}
+              </div>
+
+              {/* FEATURES */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-8 border-b border-white/10">
+                {property.surface_total && (
+                  <Feature icon={<FaRulerCombined />} label="Superficie" value={`${property.surface_total} m²`} />
+                )}
+
+                {property.bedrooms && (
+                  <Feature icon={<FaBed />} label="Dormitorios" value={property.bedrooms} />
+                )}
+
+                {property.bathrooms && (
+                  <Feature icon={<FaBath />} label="Baños" value={property.bathrooms} />
+                )}
+
+                {property.garages !== undefined && property.garages !== null && (
+                  <Feature icon={<FaCar />} label="Cocheras" value={property.garages || 0} />
+                )}
+              </div>
+
+              {/* DESCRIPTION */}
+              {property.description && (
+                <div className="pt-8">
+                  <h2 className="text-2xl font-bold text-white mb-4">
+                    Descripción
+                  </h2>
+                  <p className="text-on-surface-variant leading-relaxed whitespace-pre-wrap">
+                    {property.description}
+                  </p>
+                </div>
+              )}
+
+              {/* DETAILS */}
+              <div className="pt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {property.surface_covered && (
+                  <Detail label="Superficie cubierta" value={`${property.surface_covered} m²`} />
+                )}
+
+                {property.floor_number && (
+                  <Detail label="Piso" value={property.floor_number} />
+                )}
+
+                {property.year_built && (
+                  <Detail label="Año de construcción" value={property.year_built} />
+                )}
+
+                {property.property_type_name && (
+                  <Detail label="Tipo de propiedad" value={property.property_type_name} />
+                )}
+
+                {property.operation_type_name && (
+                  <Detail label="Operación" value={property.operation_type_name} />
+                )}
+              </div>
+
+              {/* AMENITIES */}
+              {property.amenities && property.amenities.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-white/10">
+                  <h2 className="text-2xl font-bold text-white mb-4">
+                    Amenidades
+                  </h2>
+
+                  <div className="flex flex-wrap gap-3">
+                    {property.amenities.map((amenity, index) => (
+                      <span
+                        key={index}
+                        className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/80 text-sm"
+                      >
+                        {amenity.name || amenity}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* MAP */}
+            <div className="bg-primary/40 border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+              <div className="p-6 md:p-8">
+                <span className="text-secondary tracking-[0.25em] text-xs uppercase block mb-2">
+                  Ubicación
+                </span>
+                <h2 className="text-2xl font-bold text-white">
+                  Dónde se encuentra
+                </h2>
+              </div>
+
+              <div className="h-[320px] md:h-[440px]">
+                <iframe
+                  src={mapUrl}
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen=""
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Ubicación de la propiedad"
+                />
+              </div>
+
+              <div className="p-5 border-t border-white/10 text-sm text-on-surface-variant flex gap-3">
+                <FaMapMarkerAlt className="text-secondary mt-1 flex-shrink-0" />
+                <span>{fullAddress}</span>
+              </div>
+            </div>
           </div>
 
-          {/* Mapa */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <h2 className="text-lg md:text-xl font-bold p-4 md:p-6 pb-3 md:pb-4">Ubicación</h2>
-            <div className="h-64 md:h-96">
-              <iframe
-                src={searchMapUrl}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen=""
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Ubicación de la propiedad"
-              />
-            </div>
-            <div className="p-3 md:p-4 bg-gray-50 text-xs md:text-sm text-gray-600">
-              <FaMapMarkerAlt className="inline mr-2 text-blue-500" />
-              <span className="line-clamp-2">{fullAddress}</span>
-            </div>
-          </div>
-        </div>
+          {/* SIDEBAR */}
+          <div className="lg:col-span-1">
+            <div className="bg-primary/60 border border-white/10 rounded-xl p-6 md:p-8 shadow-2xl lg:sticky lg:top-28">
+              <span className="text-secondary tracking-[0.25em] text-xs uppercase block mb-3">
+                Consulta
+              </span>
 
-        {/* Sidebar - Formulario de consulta */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow p-4 md:p-6 lg:sticky lg:top-6">
-            <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Consultar por esta propiedad</h2>
-            <p className="text-gray-600 mb-4 md:mb-6 text-sm">
-              Completa el formulario y te contactaremos a la brevedad
-            </p>
+              <h2 className="text-2xl font-bold text-white mb-3">
+                Consultar por esta propiedad
+              </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Nombre *</label>
-                <input
-                  type="text"
+              <p className="text-on-surface-variant text-sm mb-6">
+                Completá tus datos y te contactaremos a la brevedad.
+              </p>
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <Field
+                  label="Nombre *"
                   name="name"
+                  type="text"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Email *</label>
-                <input
-                  type="email"
+                <Field
+                  label="Email *"
                   name="email"
+                  type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   required
                 />
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Teléfono</label>
-                <input
-                  type="tel"
+                <Field
+                  label="Teléfono"
                   name="phone"
+                  type="tel"
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+
+                <div>
+                  <label className="text-secondary/70 text-[10px] tracking-widest uppercase font-bold block mb-2">
+                    Mensaje *
+                  </label>
+                  <textarea
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    rows="5"
+                    required
+                    className="w-full bg-transparent border border-white/15 focus:border-secondary focus:ring-0 rounded-sm px-4 py-3 text-white placeholder:text-white/40 outline-none resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-secondary text-primary h-14 text-[11px] tracking-widest uppercase font-bold hover:brightness-110 disabled:opacity-50 transition rounded-sm"
+                >
+                  {submitting ? 'Enviando...' : 'Enviar consulta'}
+                </button>
+              </form>
+
+              <div className="mt-8 pt-8 border-t border-white/10 space-y-4 text-sm text-on-surface-variant">
+                <p className="text-white font-semibold">
+                  También podés contactarnos:
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <FaPhoneAlt className="text-secondary" />
+                  <span>(011) 4822-3456</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <FaEnvelope className="text-secondary" />
+                  <span>info@inmobiliaria.com</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <FaWhatsapp className="text-secondary" />
+                  <span>WhatsApp disponible</span>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Mensaje *</label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows="4"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full bg-blue-500 text-white py-3 rounded font-semibold hover:bg-blue-600 disabled:bg-gray-400 transition"
-              >
-                {submitting ? 'Enviando...' : 'Enviar consulta'}
-              </button>
-            </form>
-
-            {/* Información de contacto */}
-            <div className="mt-6 pt-6 border-t text-sm text-gray-600">
-              <p className="mb-2">
-                <strong>También puedes contactarnos:</strong>
-              </p>
-              <p>📞 (011) 4822-3456</p>
-              <p>📧 info@inmobiliaria.com</p>
             </div>
           </div>
         </div>
+
       </div>
+    </div>
+  )
+}
+
+function Feature({ icon, label, value }) {
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+      <div className="text-secondary text-2xl mb-3">
+        {icon}
+      </div>
+      <p className="text-on-surface-variant text-xs uppercase tracking-widest mb-1">
+        {label}
+      </p>
+      <p className="text-white font-bold">
+        {value}
+      </p>
+    </div>
+  )
+}
+
+function Detail({ label, value }) {
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-lg px-4 py-3">
+      <p className="text-secondary/80 text-xs uppercase tracking-widest mb-1">
+        {label}
+      </p>
+      <p className="text-white font-semibold">
+        {value}
+      </p>
+    </div>
+  )
+}
+
+function Field({ label, name, type, value, onChange, required }) {
+  return (
+    <div>
+      <label className="text-secondary/70 text-[10px] tracking-widest uppercase font-bold block mb-2">
+        {label}
+      </label>
+      <input
+        type={type}
+        name={name}
+        value={value}
+        onChange={onChange}
+        required={required}
+        className="w-full bg-transparent border-0 border-b border-white/20 focus:border-secondary focus:ring-0 px-0 py-3 text-white placeholder:text-white/40 outline-none"
+      />
     </div>
   )
 }

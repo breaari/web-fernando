@@ -1,65 +1,82 @@
 import React, { useState } from 'react'
 import { FaChevronLeft, FaChevronRight, FaHome } from 'react-icons/fa'
-import { getImageUrl } from '../utils/imageHelper'
+
+const UPLOADS_URL = import.meta.env.VITE_UPLOADS_URL || 'https://permuok.com/back-fernando/public'
+
+function resolveImageUrl(image) {
+  const rawUrl = image?.image_url || image?.url || image
+
+  if (!rawUrl) return ''
+
+  if (rawUrl.startsWith('http')) return rawUrl
+
+  const cleanPath = rawUrl.replace(/^\/+/, '')
+
+  return `${UPLOADS_URL}/${cleanPath}`
+}
 
 export default function ImageCarousel({ images, alt = 'Property' }) {
   const [currentIndex, setCurrentIndex] = useState(0)
 
   if (!images || images.length === 0) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+      <div className="w-full h-full flex items-center justify-center bg-primary/40 text-secondary border border-white/10">
         <FaHome className="text-4xl" />
       </div>
     )
   }
 
-  const goToPrevious = (e) => {
+  const imageUrl = resolveImageUrl(images[currentIndex])
+
+  const goToPrevious = e => {
     e.stopPropagation()
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
+    setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))
   }
 
-  const goToNext = (e) => {
+  const goToNext = e => {
     e.stopPropagation()
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
+    setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))
   }
 
   return (
-    <div className="relative w-full h-full group">
+    <div className="relative w-full h-full group bg-primary/40">
       <img
-        src={getImageUrl(images[currentIndex].image_url)}
+        src={imageUrl}
         alt={alt}
         className="w-full h-full object-cover"
+        onError={e => {
+          e.currentTarget.style.display = 'none'
+        }}
       />
-      
+
       {images.length > 1 && (
         <>
-          {/* Botón anterior */}
           <button
             onClick={goToPrevious}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+            className="absolute left-3 top-1/2 -translate-y-1/2 bg-primary/80 border border-white/10 text-secondary p-3 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-secondary hover:text-primary"
           >
             <FaChevronLeft />
           </button>
 
-          {/* Botón siguiente */}
           <button
             onClick={goToNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+            className="absolute right-3 top-1/2 -translate-y-1/2 bg-primary/80 border border-white/10 text-secondary p-3 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-secondary hover:text-primary"
           >
             <FaChevronRight />
           </button>
 
-          {/* Indicadores */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
             {images.map((_, idx) => (
               <button
                 key={idx}
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation()
                   setCurrentIndex(idx)
                 }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentIndex ? 'bg-white w-4' : 'bg-white/50'
+                className={`h-1.5 rounded-full transition-all ${
+                  idx === currentIndex
+                    ? 'bg-secondary w-6'
+                    : 'bg-white/50 w-2'
                 }`}
               />
             ))}
