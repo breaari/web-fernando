@@ -230,7 +230,7 @@ export default function PropertyDetail() {
               {property.amenities && property.amenities.length > 0 && (
                 <div className="mt-8 pt-8 border-t border-white/10">
                   <h2 className="text-2xl font-bold text-white mb-4">
-                    Amenidades
+                    Amenities
                   </h2>
 
                   <div className="flex flex-wrap gap-3">
